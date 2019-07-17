@@ -1,0 +1,19 @@
+PATH
+  remote: .
+  specs:
+    ruby-production-breakpoints (0.0.1)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    minitest (5.11.3)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  minitest
+  ruby-production-breakpoints!
+
+BUNDLED WITH
+   1.17.2
