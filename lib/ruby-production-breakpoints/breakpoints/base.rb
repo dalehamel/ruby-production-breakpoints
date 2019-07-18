@@ -6,6 +6,7 @@ module ProductionBreakpoints
     class Base
 
       def initialize(source_file, start_line, end_line, trace_id: 1)
+        @injector_module = nil
         @source_file = source_file
         @start_line = start_line
         @end_line = end_line
@@ -18,13 +19,14 @@ module ProductionBreakpoints
       end
 
       def install
-        @redefined = build_redefined_definition_module(@node)
-        @ns.prepend(@redefined)
+        @injector_module = build_redefined_definition_module(@node)
+        @ns.prepend(@injector_module)
       end
 
       # FIXME saftey if already uninstalled
       def uninstall
-        ns.class.instance_eval( unprepend(@redefined) )
+        @ns.instance_eval( unprepend(@injector_module) )
+        @injector_module = nil
       end
 
       def load
