@@ -42,7 +42,7 @@ module ProductionBreakpoints
         injected = @parser.inject_ruby_block("local_bind=binding; ProductionBreakpoints.installed_breakpoints[#{@trace_id}].handle(local_bind)",
                                              "ProductionBreakpoints.installed_breakpoints[#{@trace_id}].finish(local_bind)",
                                              node.first_lineno, node.last_lineno, @start_line, @end_line)
-        Module.new { module_eval{ eval(injected) } }
+        Module.new { module_eval{ eval(injected); eval('def production_breakpoint_enabled?; true; end;') } }
       end
     end
   end
