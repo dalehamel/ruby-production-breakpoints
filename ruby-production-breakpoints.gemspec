@@ -26,7 +26,7 @@ Gem::Specification.new do |s|
   s.email = 'dale.hamel@srvthe.net'
   s.license = 'MIT'
 
-  #s.add_dependency('ruby-static-tracing') FIXME need unmixer bump or remove unmixer dep
+  s.add_dependency('ruby-static-tracing', '>= 0.0.15')
   s.add_development_dependency 'minitest'
   #s.add_development_dependency 'mocha'
   s.add_development_dependency 'pry-byebug'

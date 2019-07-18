@@ -1,4 +1,6 @@
 module ProductionBreakpoints
+
+  # FIXME this class is a mess, figure out interface and properly separate private / public
   class Parser
 
     attr_reader :root_node
@@ -21,11 +23,64 @@ module ProductionBreakpoints
       child_nodes.map { |n| find_node(n, type, first, last, depth: depth + 1) }.flatten
     end
 
+    def find_lineage(target)
+      lineage = _find_lineage(@root_node, target)
+      lineage.pop # FIXME verify leafy node is equal to target or throw an error?
+      lineage
+    end
+
+    def find_definition_namespace(target)
+      lineage = find_lineage(target)
+
+      namespaces = []
+      lineage.each do |n|
+        if n.type == :MODULE || n.type == :CLASS
+          symbols = n.children.select { |c| c.is_a?(RubyVM::AbstractSyntaxTree::Node) && c.type == :COLON2 }
+          if symbols.size != 1
+            @logger.error("Couldn't determine symbol location for parent namespace")
+          end
+          symbol = symbols.first
+
+          symstr = @source_lines[symbol.first_lineno - 1][symbol.first_column..symbol.last_column].strip
+          namespaces << symstr
+        end
+      end
+
+      return namespaces.join('::')
+    end
+
     def find_definition_symbol(start_line, end_line)
       def_node = _find_definition_node(@root_node, start_line, end_line)
       def_column_start = def_node.first_column
       def_column_end = _find_args_start(def_node).first_column
       @source_lines[def_node.first_lineno - 1][(def_column_start + 3 + 1)..def_column_end].strip.to_sym
+    end
+
+    def find_definition_node(start_line, end_line)
+      _find_definition_node(@root_node, start_line, end_line)
+    end
+
+    def _find_lineage(node, target, depth: 0)
+      child_nodes = node.children.select { |c| c.is_a?(RubyVM::AbstractSyntaxTree::Node) }
+      #@logger.debug("D: #{depth} #{node.type} has #{child_nodes.size} children and spans #{node.first_lineno}:#{node.first_column} to #{node.last_lineno}:#{node.last_column}")
+
+      if (node.type == target.type &&
+
+          target.first_lineno >= node.first_lineno &&
+          target.last_lineno <= node.last_lineno)
+        return [node]
+      end
+
+      parents = []
+      child_nodes.each do |n|
+        res = _find_lineage(n, target, depth: depth + 1)
+        if !res.empty?
+          res.unshift(n)
+          parents = res
+        end
+      end
+
+      return parents.flatten
     end
 
     # FIXME better error handling
@@ -50,6 +105,14 @@ module ProductionBreakpoints
 
     def ruby_source(start_line, end_line)
       @source_lines[(start_line-1)..(end_line-1)].join()
+    end
+
+    def inject_ruby_block(startstr, finish_str, def_start, def_end, start_line, end_line)
+      source = @source_lines.dup
+      source.insert(start_line - 1, "#{startstr} do\n<<-EOS\n") # FIXME columns? and indenting?
+      source.insert(end_line, "EOS\nend\n #{finish_str} do\n<<-EOS\n")
+      source.insert(def_end+1, "EOS\nend\n")
+      source[(def_start-1)..(def_end + 2)].join()
     end
   end
 end

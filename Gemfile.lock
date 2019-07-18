@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     ruby-production-breakpoints (0.0.1)
+      ruby-static-tracing (>= 0.0.15)
 
 GEM
   remote: https://rubygems.org/
@@ -19,11 +20,14 @@ GEM
       byebug (~> 11.0)
       pry (~> 0.10)
     rake (10.5.0)
+    ruby-static-tracing (0.0.15)
+      unmixer
     simplecov (0.17.0)
       docile (~> 1.1)
       json (>= 1.8, < 3)
       simplecov-html (~> 0.10.0)
     simplecov-html (0.10.2)
+    unmixer (0.5.0)
 
 PLATFORMS
   ruby
