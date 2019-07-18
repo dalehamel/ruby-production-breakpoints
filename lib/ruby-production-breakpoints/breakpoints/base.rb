@@ -4,6 +4,8 @@ using Unmixer
 module ProductionBreakpoints
   module Breakpoints
     class Base
+      TRACEPOINT_TYPES = []
+
       attr_reader :provider_name, :name
 
       def initialize(source_file, start_line, end_line, trace_id: 1)
@@ -18,7 +20,7 @@ module ProductionBreakpoints
         @ns = Object.const_get(@parser.find_definition_namespace(@node))
         @provider_name = File.basename(@source_file).gsub('.', '_')
         @name = "#{@method}_#{@trace_id}"
-        @tracepoint = StaticTracing::Tracepoint.new(@provider_name, @name, Integer)
+        @tracepoint = StaticTracing::Tracepoint.new(@provider_name, @name, *(self.class.const_get('TRACEPOINT_TYPES')))
       end
 
       def install

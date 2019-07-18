@@ -2,6 +2,8 @@
 
 require 'logger'
 
+require 'ruby-static-tracing'
+
 require 'ruby-production-breakpoints/version'
 require 'ruby-production-breakpoints/parser'
 require 'ruby-production-breakpoints/breakpoints'

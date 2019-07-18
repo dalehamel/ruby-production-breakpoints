@@ -1,8 +1,7 @@
-require 'ruby-static-tracing'
-
 module ProductionBreakpoints
   module Breakpoints
     class Latency < Base # FIXME refactor a bunch of these idioms into Base
+      TRACEPOINT_TYPES = [Integer]
 
       def handle(caller_binding, &block)
         return super(caller_binding, &block) unless @tracepoint.enabled?
