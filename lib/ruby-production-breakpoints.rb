@@ -25,6 +25,7 @@ module ProductionBreakpoints
     # Hack to check if there is a supported breakpoint of this type for now
     case type.name
     when 'ProductionBreakpoints::Breakpoints::Latency'
+    when 'ProductionBreakpoints::Breakpoints::Inspect'
       #logger.debug("Creating latency tracer")
       # now rewrite source to call this created breakpoint through parser
     else
