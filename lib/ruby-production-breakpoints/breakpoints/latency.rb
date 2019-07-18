@@ -4,19 +4,13 @@ module ProductionBreakpoints
   module Breakpoints
     class Latency < Base # FIXME refactor a bunch of these idioms into Base
 
-      def initialize(*args, &block)
-        super(*args, &block)
-        @method = 'latency'
-        @tracepoint = StaticTracing::Tracepoint.new(File.basename(@source_file).gsub('.', '_'), "#{@method}_#{@trace_id}", Integer)
-      end
-
-      def handle(caller_binding)
-        return eval(yield, caller_binding) unless @tracepoint.enabled?
+      def handle(caller_binding, &block)
+        return super(caller_binding, &block) unless @tracepoint.enabled?
         start_time = StaticTracing.nsec
-        v = eval(yield, caller_binding)
+        val = super(caller_binding, &block)
         duration = StaticTracing.nsec - start_time
         @tracepoint.fire(duration)
-        return v
+        return val
       end
     end
   end

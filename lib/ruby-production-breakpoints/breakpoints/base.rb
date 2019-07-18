@@ -10,14 +10,16 @@ module ProductionBreakpoints
         @start_line = start_line
         @end_line = end_line
         @trace_id = trace_id
+        @method = self.class.name.split('::').last.downcase
+        @parser = ProductionBreakpoints::Parser.new(@source_file)
+        @node = @parser.find_definition_node(@start_line, @end_line)
+        @ns = Object.const_get(@parser.find_definition_namespace(@node))
+        @tracepoint = StaticTracing::Tracepoint.new(File.basename(@source_file).gsub('.', '_'), "#{@method}_#{@trace_id}", Integer)
       end
 
       def install
-        @parser = ProductionBreakpoints::Parser.new(@source_file)
-        node = @parser.find_definition_node(@start_line, @end_line)
-        @redefined = build_redefined_definition_module(node)
-        ns = Object.const_get(@parser.find_definition_namespace(node))
-        ns.prepend(@redefined)
+        @redefined = build_redefined_definition_module(@node)
+        @ns.prepend(@redefined)
       end
 
       # FIXME saftey if already uninstalled
@@ -29,9 +31,13 @@ module ProductionBreakpoints
         @tracepoint.provider.enable
       end
 
+      def unload
+        @tracepoint.provider.disable
+      end
+
       # Allows for specific handling of the selected lines
       def handle(caller_binding)
-        return eval(yield, caller_binding)
+        eval(yield, caller_binding)
       end
 
       # Execute remaining lines of method in the same binding
@@ -41,6 +47,9 @@ module ProductionBreakpoints
 
     private
 
+      # A custom module we'll prepend in order to override
+      # It will inject handlers before and after the target lines, allowing
+      # us to keep the expected binding for the wrapped code, and remainder of the method
       def build_redefined_definition_module(node)
         injected = @parser.inject_ruby_block("local_bind=binding; ProductionBreakpoints.installed_breakpoints[#{@trace_id}].handle(local_bind)",
                                              "ProductionBreakpoints.installed_breakpoints[#{@trace_id}].finish(local_bind)",

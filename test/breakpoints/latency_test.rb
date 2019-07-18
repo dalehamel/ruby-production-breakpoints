@@ -11,7 +11,7 @@ module ProductionBreakpoints
       assert(ProductionBreakpoints::MyClass.instance_methods.include?(:some_method))
 
       refute(ProductionBreakpoints::MyClass.ancestors.first.name.nil?)
-      ProductionBreakpoints.install_breakpoint('latency', source_file, start_line, end_line)
+      ProductionBreakpoints.install_breakpoint(ProductionBreakpoints::Breakpoints::Latency, source_file, start_line, end_line)
       c = ProductionBreakpoints::MyClass.new
       assert(2, c.some_method)
 
