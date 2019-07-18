@@ -20,10 +20,13 @@ module ProductionBreakpoints
         ns.prepend(@redefined)
       end
 
-
       # FIXME saftey if already uninstalled
       def uninstall
         ns.class.instance_eval( unprepend(@redefined) )
+      end
+
+      def load
+        @tracepoint.provider.enable
       end
 
       # Allows for specific handling of the selected lines

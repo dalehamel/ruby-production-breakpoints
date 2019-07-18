@@ -7,7 +7,7 @@ module ProductionBreakpoints
       def initialize(*args, &block)
         super(*args, &block)
         @method = 'latency'
-        @tracepoint = StaticTracing::Tracepoint.new(File.basename(@source_file), "#{@method}-#{@trace_id}", Integer)
+        @tracepoint = StaticTracing::Tracepoint.new(File.basename(@source_file).gsub('.', '_'), "#{@method}_#{@trace_id}", Integer)
       end
 
       def handle(caller_binding)

@@ -24,6 +24,7 @@ module ProductionBreakpoints
       breakpoint = Breakpoints::Latency.new(source_file, start_line, end_line, trace_id: trace_id)
       self.installed_breakpoints[trace_id] = breakpoint
       breakpoint.install
+      breakpoint.load
       # now rewrite source to call this created breakpoint through parser
     else
       logger.debug("Unsupported breakpoint type #{type}")
