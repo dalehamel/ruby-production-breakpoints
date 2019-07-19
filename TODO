@@ -2,7 +2,9 @@
 - Handle interrupt to resync (load/unload) breakpoints from config file
 - Refactor parser class to be tidier
 - Ensure tests teardown as well
+- Integration tests
 - Refactor test suite
 - More tests
 - More test files to inject
 - Test injecting on modules
+- Handle single-line function definitions by parsing columns

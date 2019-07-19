@@ -1,5 +1,6 @@
 module ProductionBreakpoints
   module Breakpoints
+    # Exposes nanosecond the latency of executing the selected lines
     class Latency < Base # FIXME refactor a bunch of these idioms into Base
       TRACEPOINT_TYPES = [Integer]
 
