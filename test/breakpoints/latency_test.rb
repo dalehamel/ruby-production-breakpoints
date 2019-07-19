@@ -1,12 +1,12 @@
 require 'test_helper'
 
 module ProductionBreakpoints
-  class BreakpointTest < MiniTest::Test
+  class LatencyTest < MiniTest::Test
 
     # FIXME uses linux-specific code, should separate for portability
     def test_install_breakpoint
       start_line = 7
-      end_line = 8
+      end_line = 9
       trace_id = :test_breakpoint_install
       source_file = ruby_source_testfile_path('breakpoint_target.rb')
       require source_file

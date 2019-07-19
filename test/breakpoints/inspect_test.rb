@@ -6,7 +6,7 @@ module ProductionBreakpoints
     # FIXME uses linux-specific code, should separate for portability
     def test_install_breakpoint
       start_line = 7
-      end_line = 10
+      end_line = 9
       trace_id = :test_breakpoint_install_inspect
       source_file = ruby_source_testfile_path('inspect_target.rb')
       require source_file

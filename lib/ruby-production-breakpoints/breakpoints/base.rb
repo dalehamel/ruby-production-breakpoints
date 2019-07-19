@@ -58,9 +58,16 @@ module ProductionBreakpoints
       # It will inject handlers before and after the target lines, allowing
       # us to keep the expected binding for the wrapped code, and remainder of the method
       def build_redefined_definition_module(node)
+
+        # This is the metaprogramming to inject our breakpoint handler around the original source code
         handler = "local_bind=binding; ProductionBreakpoints.installed_breakpoints[:#{@trace_id}].handle(local_bind)"
+
+        # This is needed to keep the execution of the remaining lines of the method within the same binding
         finisher = "ProductionBreakpoints.installed_breakpoints[:#{@trace_id}].finish(local_bind)"
-        injected = @parser.inject_ruby_block(handler, finisher,
+
+        # This injects our handler and finisher blocks into the original source code, treating the code
+        # in between as string literals to be evaluated
+        injected = @parser.inject_metaprogramming_handlers(handler, finisher,
                                              node.first_lineno, node.last_lineno, @start_line, @end_line)
         #ProductionBreakpoints.logger.debug(injected)
         Module.new { module_eval{ eval(injected); eval('def production_breakpoint_enabled?; true; end;') } }

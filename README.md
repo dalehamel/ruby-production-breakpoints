@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/dalehamel/ruby-production-breakpoints.svg?branch=master)](https://travis-ci.org/dalehamel/ruby-production-breakpoints)
+
 # Ruby Production Breakpoints
 
 This is the start of a gem to enable "production breakpoints" in Ruby.
