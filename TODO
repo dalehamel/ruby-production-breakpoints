@@ -1,7 +1,10 @@
 - Load config from file from configurable path
 - Handle interrupt to resync (load/unload) breakpoints from config file
 - Refactor parser class to be tidier
-- Ensure tests teardown as well
+- Ensure tests teardown as well, so:
+ - the prepending doesn't bleed between tests
+ - we can reuse test files
+ - tearing down is thoroughly tested
 - Integration tests
 - Refactor test suite
 - More tests

@@ -17,7 +17,7 @@ module ProductionBreakpoints
         @method = self.class.name.split('::').last.downcase
         @parser = ProductionBreakpoints::Parser.new(@source_file)
         @node = @parser.find_definition_node(@start_line, @end_line)
-        @ns = Object.const_get(@parser.find_definition_namespace(@node))
+        @ns = Object.const_get(@parser.find_definition_namespace(@node)) # FIXME error handling, if not found
         @provider_name = File.basename(@source_file).gsub('.', '_')
         @name = "#{@method}_#{@trace_id}"
         @tracepoint = StaticTracing::Tracepoint.new(@provider_name, @name, *(self.class.const_get('TRACEPOINT_TYPES')))
