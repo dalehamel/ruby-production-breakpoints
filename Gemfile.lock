@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    ruby-production-breakpoints (0.0.3)
+    ruby-production-breakpoints (0.0.4)
       ruby-static-tracing (>= 0.0.15)
 
 GEM
