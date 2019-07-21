@@ -30,7 +30,7 @@ module ProductionBreakpoints
 
       # FIXME saftey if already uninstalled
       def uninstall
-        @ns.instance_eval( unprepend(@injector_module) )
+        @ns.instance_eval{ unprepend(@injector_module) }
         @injector_module = nil
       end
 

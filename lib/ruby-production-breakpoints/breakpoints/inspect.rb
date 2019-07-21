@@ -1,7 +1,7 @@
 module ProductionBreakpoints
   module Breakpoints
     # Inspect result of the last evaluated expression
-    class Inspect < Base # FIXME refactor a bunch of these idioms into Base
+    class Inspect < Base
       TRACEPOINT_TYPES = [String]
 
       def handle(caller_binding, &block)

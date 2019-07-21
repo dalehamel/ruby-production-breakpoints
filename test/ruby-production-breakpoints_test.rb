@@ -3,26 +3,26 @@ require 'test_helper'
 module ProductionBreakpoints
   class RubyProductionBreakpointsTest < MiniTest::Test
 
-    def test_load_from_config
+    def setup
       require ruby_source_testfile_path('config_target.rb')
       ProductionBreakpoints.config_path = config_testfile_path('test_load.json')
       ProductionBreakpoints.reload_config
+      @bp = JSON.load(File.read(ProductionBreakpoints.config_path))['breakpoints'].first
+    end
 
-      bp = JSON.load(File.read(ProductionBreakpoints.config_path))['breakpoints'].first
+    def test_load_from_config
+
       assert(ProductionBreakpoints::MyConfigClass.instance_methods.include?(:some_method))
-
-      #refute(ProductionBreakpoints::MyConfigClass.ancestors.first.name.nil?)
-      ProductionBreakpoints.install_breakpoint(ProductionBreakpoints::Breakpoints::Inspect,
-                                               bp['source_file'], bp['start_line'], bp['end_line'],
-                                               trace_id: bp['trace_id'])
       c = ProductionBreakpoints::MyConfigClass.new
       assert(2, c.some_method)
 
       assert(ProductionBreakpoints::MyConfigClass.ancestors.first.name.nil?)
       assert(c.respond_to?(:production_breakpoint_enabled?))
       assert(c.production_breakpoint_enabled?)
+    end
 
-      breakpoint = ProductionBreakpoints.installed_breakpoints[bp['trace_id'].to_sym]
+    def test_elf_notes
+      breakpoint = ProductionBreakpoints.installed_breakpoints[@bp['trace_id'].to_sym]
       # FIXME this is linux specific from here on
       provider_fd = find_provider_fd(breakpoint.provider_name)
       assert(provider_fd)
@@ -37,4 +37,9 @@ module ProductionBreakpoints
                    elf_notes.lines.find { |l| l =~ /\s+Name:/ }.split(/\s+/).last)
     end
   end
+
+  def teardown
+      ProductionBreakpoints.disable_breakpoint(@bp['trace_id'].to_sym)
+  end
+
 end
