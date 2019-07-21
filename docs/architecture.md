@@ -12,10 +12,6 @@ Unless a breakpoint is both enabled and attached to by a debugger, it shouldn't 
 # Injecting breakpoints
 
 To do this, we will need to actually rewrite Ruby functions to inject our tracing code around the selected line or lines. Ruby 2.6 + has built-in AST parsing, so we can use this to determine what needs to be redefined, in order to add our tracer.
- 
-This technique should be applicable to other dynamic languages, but Ruby is particularly well-suited to it, as it is easy to override and redefine methods dynamically at runtime.
- 
-This gem leverages the ruby-static-tracing gem which provides the 'secret sauce' that allows for plucking this data out of a ruby process, using the kernel’s handling of the intel x86 “Breakpoint” int3 instruction.
 
 The AST parsing will show us the scope of the lines that the user would like to trace, and will load the method scope of the lines, in order to inject the tracing support. This modified ruby code string can then be evaluated in the scope of an anonymous module, which is prepended to the parent of the method that has been redefined.
 
@@ -55,11 +51,46 @@ These values indicate:
 
 Many breakpoints can be specified. Breakpoints that apply to the same file are added and removed simultaneously. Breakpoints that are applied but not specified in the config file will be removed if the config file is reloaded.
 
+# Built-in breakpoints
 
-# Loading breakpoints
+## Latency
+
+Output: Integer, nanoseconds elapsed
+
+The latency breakpoint provides the elapsed time from a monotonic source, for the duration of the breakpoint handler.
+
+This shows the time required to execute the code between the start and end lines, within a given method.
+
+## Locals
+
+Output: String, key,value via ruby inspect
+
+The 'locals' breakpoint shows the value of all locals.
+
+NOTE: due to limitations in eBPF, there is a maximum serializable string size. Very complex objects cannot be efficiently serialized and inspected.
+
+## Inspect
+
+Output: String, value via ruby inspect
+
+The 'inspect' command shows the inspected value of whatever the last expression evaluated to within the breakpoint handler block.
+
+# Internals
+
+## Loading breakpoints
+ 
+This gem leverages the ruby-static-tracing gem which provides the 'secret sauce' that allows for plucking this data out of a ruby process, using the kernel’s handling of the intel x86 “Breakpoint” int3 instruction.
 
 For each source file, a 'shadow' ELF stub is associated with it, and can be easily found by inspecting the processes open file handles.
 
 After all breakpoints have been specified for a file, the ELF stub can be generated and loaded. To update or remove breakpoints, this ELF stub needs to be re-loaded, which requires the breakpoints to be disabled first. To avoid this, the scope could be changed to be something other than file, but file is believed to be nice and easily discoverable for now.
 
-The tracing code will noop, until a tracer is actually attached to it, and should have minimal performance implications. Something like unmixer (which hooks into the ruby internal api) could be used to prevent performance degradation caused by growing lists of overridden functions.
+The tracing code will noop, until a tracer is actually attached to it, and should have minimal performance implications.
+
+## Ruby Override technique
+
+The 'unmixer' gem hooks into the ruby internal header API, and provides a back-door into the RubyVM source code to 'unappend' classes or modules from the global hierarchy.
+
+An anonymous module is created, with the modified source code containing our breakpoint handler.
+
+To enable the breakpoint code, this module is prepended to the original method's parent. To undo this, the module is simply 'unprepended', a feature unmixer uses to tap into Ruby's ancestry hierarchy via a native extension.
