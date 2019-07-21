@@ -12,13 +12,8 @@ This gem lets you dynamically add "production breakpoints" to a live, running ap
 
 Once you're done debugging, the breakpoints can be unloaded and removed.
 
-# How this works
+# How to use this
 
-Ruby "production breakpoints" rewrite the source code of a method with the targeted lines to include a wrapper around those lines.
+This is in early phases of development, but the [architecture doc](./docs/architecture.md) is a good place to get started.
 
-The method is redefined by prepending a module with the new definition to the parent of the original method, overriding it. To undo this,
-the module can be 'unprepended' restoring the original behavior.
-
-When a breakpoint line is executed, we can use the Linux Kernel to interrupt our application and retrieve some data we've prepared for it.
-
-Unless a breakpoint is both enabled and attached to by a debugger, it shouldn't change execution
+// FIXME  show basic usage in README once stable

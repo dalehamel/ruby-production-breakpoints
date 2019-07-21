@@ -1,4 +1,5 @@
 - Load config from file from configurable path
+ - Loading done, not configurable yet
 - Handle interrupt to resync (load/unload) breakpoints from config file
 - Refactor parser class to be tidier
 - Ensure tests teardown as well, so:
@@ -11,3 +12,4 @@
 - More test files to inject
 - Test injecting on modules
 - Handle single-line function definitions by parsing columns
+- Improve docs, move to bpf.sh report
