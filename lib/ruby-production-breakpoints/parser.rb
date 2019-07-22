@@ -90,6 +90,7 @@ module ProductionBreakpoints
     #
     # In this example, the entire body of the method has been wrapped in our handler.
     # FIXME is there an elegant way to save the line number and file information here, and make
+    # FIXME inject by column, not just line, to ensure edge cases work
     # it available to eval later? Would help to debug what is being eval'd
     def inject_metaprogramming_handlers(startstr, finish_str, def_start, def_end, start_line, end_line)
       source = @source_lines.dup
