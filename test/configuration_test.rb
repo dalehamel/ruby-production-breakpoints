@@ -1,12 +1,12 @@
 require 'test_helper'
 
 module ProductionBreakpoints
-  class RubyProductionBreakpointsTest < ProductionBreakpointsTest
+  class ConfigTest < ProductionBreakpointsTest
 
     def setup
       require ruby_source_testfile_path('config_target.rb')
       ProductionBreakpoints.config_path = config_testfile_path('test_load.json')
-      ProductionBreakpoints.sync!
+      Process.kill(Configuration.instance.signal, Process.pid)
       @bp = JSON.load(File.read(ProductionBreakpoints.config_path))['breakpoints'].first
     end
 

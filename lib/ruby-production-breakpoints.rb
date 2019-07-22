@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 require 'logger'
-require 'json'
 
 require 'ruby-static-tracing'
 
 require 'ruby-production-breakpoints/version'
+require 'ruby-production-breakpoints/configuration'
 require 'ruby-production-breakpoints/parser'
 require 'ruby-production-breakpoints/breakpoints'
 
@@ -18,7 +18,7 @@ module ProductionBreakpoints
   attr_accessor :logger, :installed_breakpoints, :config_path
 
   self.logger = Logger.new(STDERR)
-  self.installed_breakpoints = {}
+  self.installed_breakpoints = {} # FIXME namespace by provider, to allow multiple BP per file
   self.config_path = "/tmp/prod_bp_config" # How to handle multiple?
 
   # For now add new types here
@@ -47,15 +47,42 @@ module ProductionBreakpoints
     breakpoint.uninstall
   end
 
-  # load config file and refresh breakpoints
-  # do this at init, but also trigger this via a signal handler
-  def reload_config
-    return unless File.exists?(self.config_path)
-    config = JSON.load(File.read(self.config_path))
-
-    config['breakpoints'].each do |bp|
-      type = Object.const_get("ProductionBreakpoints::Breakpoints::#{bp['type'].capitalize}")
-      install_breakpoint(type, bp['source_file'], bp['start_line'], bp['end_line'], trace_id: bp['trace_id'])
+  def disable!
+    self.installed_breakpoints.each do |trace_id, bp|
+      disable_breakpoint(trace_id)
     end
+  end
+
+  def sync!
+    # FIXME don't just install, also remove - want to 'resync'
+    #logger.debug("Resync initiated")
+    desired = Configuration.instance.config['breakpoints']
+
+    desired_trace_ids = desired.map { |bp| bp['trace_id'] }
+    installed_trace_ids = self.installed_breakpoints.keys
+
+    to_install_tids = desired_trace_ids - installed_trace_ids
+    to_remove_tids = installed_trace_ids - desired_trace_ids
+    to_install = desired.select { |bp| to_install_tids.include?(bp['trace_id']) }
+    #logger.debug("Will install #{to_install.size} breakpoints")
+    #logger.debug("Will remove #{to_remove_tids.size} breakpoints")
+
+    to_install.each do |bp|
+      handler = breakpoint_constant_for_type(bp)
+      install_breakpoint(handler, bp['source_file'], bp['start_line'], bp['end_line'], trace_id: bp['trace_id'])
+    end
+
+    to_remove_tids.each do |trace_id|
+      disable_breakpoint(trace_id)
+    end
+  end
+
+private
+
+  def breakpoint_constant_for_type(bp)
+    symstr = "ProductionBreakpoints::Breakpoints::#{bp['type'].capitalize}"
+    type = Object.const_get(symstr)
+  rescue NameError
+    ProductionBreakpoints.logger.error("Could not find breakpoint handler for #{symstr}")
   end
 end

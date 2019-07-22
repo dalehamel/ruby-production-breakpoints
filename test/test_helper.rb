@@ -3,6 +3,7 @@
 require 'simplecov'
 SimpleCov.start
 require 'minitest/autorun'
+require 'minitest/hooks/test'
 require 'pry-byebug' if ENV['PRY']
 require_relative '../lib/ruby-production-breakpoints.rb'
 
@@ -20,3 +21,13 @@ def find_provider_fd(provider_name)
   rescue Errno::ENOENT
   end
 end
+
+require 'minitest/hooks/test'
+
+
+module ProductionBreakpoints
+  class ProductionBreakpointsTest < MiniTest::Test
+    include Minitest::Hooks
+  end
+end
+

@@ -14,6 +14,6 @@ Once you're done debugging, the breakpoints can be unloaded and removed.
 
 # How to use this
 
-This is in early phases of development, but the [architecture doc](./docs/architecture.md) is a good place to get started.
+This is in early phases of development, but the [architecture doc](https://bpf.sh/production-breakpoints-doc/index.html) is a good place to get started.
 
-// FIXME  show basic usage in README once stable
+// FIXME  show basic usage right here in README once stable

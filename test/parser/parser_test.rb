@@ -1,7 +1,7 @@
 require 'test_helper'
 
 module ProductionBreakpoints
-  class ParserTest < MiniTest::Test
+  class ParserTest < ProductionBreakpointsTest
 
 
     def test_find_known_method_symbol
@@ -61,5 +61,8 @@ EOF
       assert_equal(ProductionBreakpoints::MyClass, ns)
     end
 
+    def after_all
+      ProductionBreakpoints.disable!
+    end
   end
 end

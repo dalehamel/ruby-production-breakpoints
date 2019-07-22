@@ -1,7 +1,7 @@
 require 'test_helper'
 
 module ProductionBreakpoints
-  class LatencyTest < MiniTest::Test
+  class LatencyTest < ProductionBreakpointsTest
 
     def setup
       @start_line = 7
@@ -45,6 +45,10 @@ module ProductionBreakpoints
 
     def teardown
       ProductionBreakpoints.disable_breakpoint(@trace_id)
+    end
+
+    def after_all
+      ProductionBreakpoints.disable!
     end
   end
 end

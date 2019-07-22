@@ -1,7 +1,7 @@
 require 'test_helper'
 
 module ProductionBreakpoints
-  class InspectBreakpointTest < MiniTest::Test
+  class InspectBreakpointTest < ProductionBreakpointsTest
 
     def setup
       @start_line = 7
@@ -44,6 +44,10 @@ module ProductionBreakpoints
 
     def teardown
       ProductionBreakpoints.disable_breakpoint(@trace_id)
+    end
+
+    def after_all
+      ProductionBreakpoints.disable!
     end
   end
 end
