@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'json'
 
 module ProductionBreakpoints
@@ -26,7 +27,7 @@ module ProductionBreakpoints
     def initialize
       @mode = Modes::SIGNAL
       @signal = Modes::SIGNALS::SIGURG
-      if File.exists?(ProductionBreakpoints.config_path)
+      if File.exist?(ProductionBreakpoints.config_path)
         @config = JSON.load(File.read(ProductionBreakpoints.config_path))
       else
         ProductionBreakpoints.logger.error("Config file #{ProductionBreakpoints.config_path} not found")
@@ -76,7 +77,7 @@ module ProductionBreakpoints
 
     # Enables a new trap handler
     def enable_trap
-      #ProductionBreakpoints.logger.debug("trap handler enabled for #{@signal}")
+      # ProductionBreakpoints.logger.debug("trap handler enabled for #{@signal}")
       Signal.trap(@signal) { ProductionBreakpoints.sync! }
     end
   end

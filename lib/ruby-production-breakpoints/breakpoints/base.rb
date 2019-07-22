@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 require 'unmixer'
 using Unmixer
 
 module ProductionBreakpoints
   module Breakpoints
     class Base
-      TRACEPOINT_TYPES = []
+      TRACEPOINT_TYPES = [].freeze
 
       attr_reader :provider_name, :name
 
@@ -17,10 +19,10 @@ module ProductionBreakpoints
         @method = self.class.name.split('::').last.downcase
         @parser = ProductionBreakpoints::Parser.new(@source_file)
         @node = @parser.find_definition_node(@start_line, @end_line)
-        @ns = Object.const_get(@parser.find_definition_namespace(@node)) # FIXME error handling, if not found
+        @ns = Object.const_get(@parser.find_definition_namespace(@node)) # FIXME: error handling, if not found
         @provider_name = File.basename(@source_file).gsub('.', '_')
         @name = "#{@method}_#{@trace_id}"
-        @tracepoint = StaticTracing::Tracepoint.new(@provider_name, @name, *(self.class.const_get('TRACEPOINT_TYPES')))
+        @tracepoint = StaticTracing::Tracepoint.new(@provider_name, @name, *self.class.const_get('TRACEPOINT_TYPES'))
       end
 
       def install
@@ -28,9 +30,9 @@ module ProductionBreakpoints
         @ns.prepend(@injector_module)
       end
 
-      # FIXME saftey if already uninstalled
+      # FIXME: saftey if already uninstalled
       def uninstall
-        @ns.instance_eval{ unprepend(@injector_module) }
+        @ns.instance_eval { unprepend(@injector_module) }
         @injector_module = nil
       end
 
@@ -52,13 +54,12 @@ module ProductionBreakpoints
         eval(yield, caller_binding)
       end
 
-    private
+      private
 
       # A custom module we'll prepend in order to override
       # It will inject handlers before and after the target lines, allowing
       # us to keep the expected binding for the wrapped code, and remainder of the method
       def build_redefined_definition_module(node)
-
         # This is the metaprogramming to inject our breakpoint handler around the original source code
         handler = "local_bind=binding; ProductionBreakpoints.installed_breakpoints[:#{@trace_id}].handle(local_bind)"
 
@@ -68,9 +69,9 @@ module ProductionBreakpoints
         # This injects our handler and finisher blocks into the original source code, treating the code
         # in between as string literals to be evaluated
         injected = @parser.inject_metaprogramming_handlers(handler, finisher,
-                                             node.first_lineno, node.last_lineno, @start_line, @end_line)
-        #ProductionBreakpoints.logger.debug(injected)
-        Module.new { module_eval{ eval(injected); eval('def production_breakpoint_enabled?; true; end;') } }
+                                                           node.first_lineno, node.last_lineno, @start_line, @end_line)
+        # ProductionBreakpoints.logger.debug(injected)
+        Module.new { module_eval { eval(injected); eval('def production_breakpoint_enabled?; true; end;') } }
       end
     end
   end
