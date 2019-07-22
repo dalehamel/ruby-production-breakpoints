@@ -60,6 +60,52 @@ module ProductionBreakpoints
       _find_definition_node(@root_node, start_line, end_line)
     end
 
+
+# This method is a litle weird and pretty deep into metaprogramming, so i'll try to explain it
+#
+# Given the source method some_method, and a range of lines to apply the breakpoint to, we will inject
+# calls two breakpoint methods. We will pass these calls the string representation of the original source code.
+# If the string of original source is part of the "handle" block, it will run withing the binding
+# of the method up to that point, and allow for us to run our custom handler method to apply our debugging automation.
+#
+# Any remaining code in the method also needs to be eval'd, as we want it to be recognized in the original binding,
+# and the same binding as we've used for evaluating our handler. This allows us to keep local variables persisted
+# "between blocks", as we want our breakpoint code to have no impact to the original bindings and source code.
+#
+# A generated breakpoint is shown below, the resulting string. is what will be evaluated on the method
+# that we will prepend to the original parent in order to initiate our override.
+#
+# def some_method
+# local_bind=binding; ProductionBreakpoints.installed_breakpoints[:test_breakpoint_install].handle(local_bind) do
+# <<-EOS
+#       a = 1
+#       sleep 0.5
+#       b = a + 1
+# EOS
+# end
+#  ProductionBreakpoints.installed_breakpoints[:test_breakpoint_install].finish(local_bind) do
+# <<-EOS
+# EOS
+# end
+#     end
+#
+# In this example, the entire body of the method has been wrapped in our handler.
+# FIXME is there an elegant way to save the line number and file information here, and make
+# it available to eval later? Would help to debug what is being eval'd
+    def inject_metaprogramming_handlers(startstr, finish_str, def_start, def_end, start_line, end_line)
+      source = @source_lines.dup
+      source.insert(start_line - 1, "#{startstr} do\n<<-EOS\n") # FIXME columns? and indenting?
+      source.insert(end_line + 1, "EOS\nend\n #{finish_str} do\n<<-EOS\n")
+      source.insert(def_end + 1, "EOS\nend\n")
+      source[(def_start-1)..(def_end + 2)].join()
+    end
+
+    def ruby_source(start_line, end_line)
+      @source_lines[(start_line-1)..(end_line-1)].join()
+    end
+
+private
+
     def _find_lineage(node, target, depth: 0)
       child_nodes = node.children.select { |c| c.is_a?(RubyVM::AbstractSyntaxTree::Node) }
       #@logger.debug("D: #{depth} #{node.type} has #{child_nodes.size} children and spans #{node.first_lineno}:#{node.first_column} to #{node.last_lineno}:#{node.last_column}")
@@ -101,49 +147,6 @@ module ProductionBreakpoints
         @logger.error("I didn't think this was possible, I must have been wrong")
       end
       args.first
-    end
-
-    def ruby_source(start_line, end_line)
-      @source_lines[(start_line-1)..(end_line-1)].join()
-    end
-
-# This method is a litle weird and pretty deep into metaprogramming, so i'll try to explain it
-#
-# Given the source method some_method, and a range of lines to apply the breakpoint to, we will inject
-# calls two breakpoint methods. We will pass these calls the string representation of the original source code.
-# If the string of original source is part of the "handle" block, it will run withing the binding
-# of the method up to that point, and allow for us to run our custom handler method to apply our debugging automation.
-#
-# Any remaining code in the method also needs to be eval'd, as we want it to be recognized in the original binding,
-# and the same binding as we've used for evaluating our handler. This allows us to keep local variables persisted
-# "between blocks", as we want our breakpoint code to have no impact to the original bindings and source code.
-#
-# A generated breakpoint is shown below, the resulting string. is what will be evaluated on the method
-# that we will prepend to the original parent in order to initiate our override.
-#
-# def some_method
-# local_bind=binding; ProductionBreakpoints.installed_breakpoints[:test_breakpoint_install].handle(local_bind) do
-# <<-EOS
-#       a = 1
-#       sleep 0.5
-#       b = a + 1
-# EOS
-# end
-#  ProductionBreakpoints.installed_breakpoints[:test_breakpoint_install].finish(local_bind) do
-# <<-EOS
-# EOS
-# end
-#     end
-#
-# In this example, the entire body of the method has been wrapped in our handler.
-# FIXME is there an elegant way to save the line number and file information here, and make
-# it available to eval later? Would help to debug what is being eval'd
-    def inject_metaprogramming_handlers(startstr, finish_str, def_start, def_end, start_line, end_line)
-      source = @source_lines.dup
-      source.insert(start_line - 1, "#{startstr} do\n<<-EOS\n") # FIXME columns? and indenting?
-      source.insert(end_line + 1, "EOS\nend\n #{finish_str} do\n<<-EOS\n")
-      source.insert(def_end + 1, "EOS\nend\n")
-      source[(def_start-1)..(def_end + 2)].join()
     end
   end
 end
