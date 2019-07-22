@@ -7,7 +7,9 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
+    ansi (1.5.0)
     ast (2.4.0)
+    builder (3.2.3)
     byebug (11.0.1)
     coderay (1.1.2)
     docile (1.3.2)
@@ -17,6 +19,11 @@ GEM
     minitest (5.11.3)
     minitest-hooks (1.5.0)
       minitest (> 5.3)
+    minitest-reporters (1.3.6)
+      ansi
+      builder
+      minitest (>= 5.0)
+      ruby-progressbar
     parallel (1.17.0)
     parser (2.6.3.0)
       ast (~> 2.4.0)
@@ -52,6 +59,7 @@ PLATFORMS
 DEPENDENCIES
   minitest
   minitest-hooks
+  minitest-reporters
   pry-byebug
   rake (< 11.0)
   rubocop
