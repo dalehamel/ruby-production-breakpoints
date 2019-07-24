@@ -1,6 +1,27 @@
 # frozen_string_literal: true
 
 module ProductionBreakpoints
+
+  class BreakpointMethodOverride
+
+    # FINISH ME - add columns handling here
+    def initialize(bp)
+      handler_payload = bp.parser.get_injected_method_source_definition
+      payload_offset = (bp.start_line - bp.node.first_lineno) - 1 # rubylines indexed by 1
+      resume_offset = (bp.end_line - bp.node.first_lineno) - 1 # rubylines indexed by 1
+      payload_size = bp.end_line - bp.start_line
+
+        @unmodified_src = handler_payload.lines[0..payload_offset]
+        @handler_src = handler_payload[payload_offset..payload_size]
+        @resume_src = handler_payload[resume_offset..-1]
+
+        @unmodified_src = RubyVM::InstructionSequence.compile(@unmodified_src)
+        @handler_iseq = RubyVM::InstructionSequence.compile(@handler_src)
+        @resume_iseq = RubyVM::InstructionSequence.compile(@resume_src)
+    end
+  end
+
+  end
   # FIXME: this class is a mess, figure out interface and properly separate private / public
   class Parser
     attr_reader :root_node
@@ -9,18 +30,6 @@ module ProductionBreakpoints
       @root_node = RubyVM::AbstractSyntaxTree.parse_file(source_file)
       @source_lines = File.read(source_file).lines
       @logger = ProductionBreakpoints.logger
-    end
-
-    # FIXME: set a max depth here to pretent unbounded recursion? probably should
-    def find_node(node, type, first, last, depth: 0)
-      child_nodes = node.children.select { |c| c.is_a?(RubyVM::AbstractSyntaxTree::Node) }
-      # @logger.debug("D: #{depth} #{node.type} has #{child_nodes.size} children and spans #{node.first_lineno}:#{node.first_column} to #{node.last_lineno}:#{node.last_column}")
-
-      if node.type == type && first >= node.first_lineno && last <= node.last_lineno
-        return node
-      end
-
-      child_nodes.map { |n| find_node(n, type, first, last, depth: depth + 1) }.flatten
     end
 
     def find_lineage(target)
@@ -60,48 +69,8 @@ module ProductionBreakpoints
       _find_definition_node(@root_node, start_line, end_line)
     end
 
-    # This method is a litle weird and pretty deep into metaprogramming, so i'll try to explain it
-    #
-    # Given the source method some_method, and a range of lines to apply the breakpoint to, we will inject
-    # calls two breakpoint methods. We will pass these calls the string representation of the original source code.
-    # If the string of original source is part of the "handle" block, it will run withing the binding
-    # of the method up to that point, and allow for us to run our custom handler method to apply our debugging automation.
-    #
-    # Any remaining code in the method also needs to be eval'd, as we want it to be recognized in the original binding,
-    # and the same binding as we've used for evaluating our handler. This allows us to keep local variables persisted
-    # "between blocks", as we want our breakpoint code to have no impact to the original bindings and source code.
-    #
-    # A generated breakpoint is shown below, the resulting string. is what will be evaluated on the method
-    # that we will prepend to the original parent in order to initiate our override.
-    #
-    # def some_method
-    # local_bind=binding; ProductionBreakpoints.installed_breakpoints[:test_breakpoint_install].handle(local_bind) do
-    # <<-EOS
-    #       a = 1
-    #       sleep 0.5
-    #       b = a + 1
-    # EOS
-    # end
-    #  ProductionBreakpoints.installed_breakpoints[:test_breakpoint_install].finish(local_bind) do
-    # <<-EOS
-    # EOS
-    # end
-    #     end
-    #
-    # In this example, the entire body of the method has been wrapped in our handler.
-    # FIXME is there an elegant way to save the line number and file information here, and make
-    # FIXME inject by column, not just line, to ensure edge cases work
-    # it available to eval later? Would help to debug what is being eval'd
-    def inject_metaprogramming_handlers(startstr, finish_str, def_start, def_end, start_line, end_line)
-      source = @source_lines.dup
-      source.insert(start_line - 1, "#{startstr} do\n<<-EOS\n") # FIXME: columns? and indenting?
-      source.insert(end_line + 1, "EOS\nend\n #{finish_str} do\n<<-EOS\n")
-      source.insert(def_end + 1, "EOS\nend\n")
-      source[(def_start - 1)..(def_end + 2)].join
-    end
-
-    def ruby_source(start_line, end_line)
-      @source_lines[(start_line - 1)..(end_line - 1)].join
+    def get_injected_method_source_definition
+      @source_lines[(start_line - 1)..]
     end
 
     private
@@ -148,5 +117,22 @@ module ProductionBreakpoints
       end
       args.first
     end
+
+
+    # I think that it is fine that i've used recursion here, as I dont't think that the AST could possible have a loop.
+    # The base case should terminate when the node is found, or error out if it is not
+    # The case for it not found is not well tested and this error needs to be handled better
+    # FIXME: set a max depth here to prevent unbounded recursion? probably should
+    def find_node(node, type, first, last, depth: 0)
+      child_nodes = node.children.select { |c| c.is_a?(RubyVM::AbstractSyntaxTree::Node) }
+      # @logger.debug("D: #{depth} #{node.type} has #{child_nodes.size} children and spans #{node.first_lineno}:#{node.first_column} to #{node.last_lineno}:#{node.last_column}")
+
+      if node.type == type && first >= node.first_lineno && last <= node.last_lineno
+        return node
+      end
+
+      child_nodes.map { |n| find_node(n, type, first, last, depth: depth + 1) }.flatten
+    end
+
   end
 end
