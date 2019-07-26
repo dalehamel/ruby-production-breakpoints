@@ -29,7 +29,7 @@ module ProductionBreakpoints
 
       def install
         @vm_tracepoint = TracePoint.new(:line) do |tp|
-          self.handle(tp)
+          handle(tp)
         end
         @vm_tracepoint.enable(target: @ns.instance_method(@method_symbol))
       end
@@ -47,9 +47,7 @@ module ProductionBreakpoints
       end
 
       # Allows for specific handling of the selected lines
-      def handle(caller_binding)
-      end
-
+      def handle(caller_binding); end
     end
   end
 end
