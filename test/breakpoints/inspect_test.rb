@@ -19,10 +19,6 @@ module ProductionBreakpoints
       assert(ProductionBreakpoints::MyInspectClass.instance_methods.include?(:some_method))
       c = ProductionBreakpoints::MyInspectClass.new
       assert(2, c.some_method)
-
-      assert(ProductionBreakpoints::MyInspectClass.ancestors.first.name.nil?)
-      assert(c.respond_to?(:production_breakpoint_enabled?))
-      assert(c.production_breakpoint_enabled?)
     end
 
     def test_elf_notes

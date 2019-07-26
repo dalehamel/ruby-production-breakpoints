@@ -20,10 +20,6 @@ module ProductionBreakpoints
 
       c = ProductionBreakpoints::MyClass.new
       assert(2, c.some_method)
-
-      assert(ProductionBreakpoints::MyClass.ancestors.first.name.nil?)
-      assert(c.respond_to?(:production_breakpoint_enabled?))
-      assert(c.production_breakpoint_enabled?)
     end
 
     def test_elf_notes

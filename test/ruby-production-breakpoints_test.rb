@@ -11,14 +11,9 @@ module ProductionBreakpoints
     end
 
     def test_load_from_config
-
       assert(ProductionBreakpoints::MyConfigClass.instance_methods.include?(:some_method))
       c = ProductionBreakpoints::MyConfigClass.new
       assert(2, c.some_method)
-
-      assert(ProductionBreakpoints::MyConfigClass.ancestors.first.name.nil?)
-      assert(c.respond_to?(:production_breakpoint_enabled?))
-      assert(c.production_breakpoint_enabled?)
     end
 
     def test_elf_notes

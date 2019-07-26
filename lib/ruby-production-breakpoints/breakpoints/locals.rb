@@ -6,15 +6,14 @@ module ProductionBreakpoints
     class Locals < Base # FIXME: refactor a bunch of these idioms into Base
       TRACEPOINT_TYPES = [String].freeze
 
-      def handle(caller_binding, &block)
-        return super(caller_binding, &block) unless @tracepoint.enabled?
+      def handle(vm_tracepoint)
+        return unless @tracepoint.enabled?
 
-        val = super(caller_binding, &block)
-        locals = caller_binding.local_variables
-        locals.delete(:local_bind) # we define this, so we'll get rid of it
-        vals = locals.map { |v| [v, caller_binding.local_variable_get(v)] }.to_h
+        locals = vm_tracepoint.binding.local_variables
+        vals = locals.map do |v|
+          [v, vm_tracepoint.binding.local_variable_get(v)]
+        end.to_h
         @tracepoint.fire(vals.inspect)
-        val
       end
     end
   end

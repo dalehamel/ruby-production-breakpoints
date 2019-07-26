@@ -6,12 +6,10 @@ module ProductionBreakpoints
     class Inspect < Base
       TRACEPOINT_TYPES = [String].freeze
 
-      def handle(caller_binding, &block)
-        return super(caller_binding, &block) unless @tracepoint.enabled?
-
-        val = super(caller_binding, &block)
+      def handle(vm_tracepoint)
+        return unless @tracepoint.enabled?
+        val = tracepoint.return_value
         @tracepoint.fire(val.inspect)
-        val
       end
     end
   end

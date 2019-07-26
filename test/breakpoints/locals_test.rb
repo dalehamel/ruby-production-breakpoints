@@ -20,10 +20,6 @@ module ProductionBreakpoints
 
       c = ProductionBreakpoints::MyLocalsClass.new
       assert(2, c.some_method)
-
-      assert(ProductionBreakpoints::MyLocalsClass.ancestors.first.name.nil?)
-      assert(c.respond_to?(:production_breakpoint_enabled?))
-      assert(c.production_breakpoint_enabled?)
     end
 
 
