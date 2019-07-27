@@ -1,30 +1,33 @@
 require 'test_helper'
 
 module ProductionBreakpoints
-  class LocalsBreakpointTest < ProductionBreakpointsTest
+  class UstackTest < ProductionBreakpointsTest
 
     def setup
-      @start_line = 7
-      @end_line = 9
-      @trace_id = :test_breakpoint_install
-      @source_file = ruby_source_testfile_path('locals_target.rb')
+      @start_line = 10
+      @end_line = 11
+      @trace_id = :ustack_test
+      @source_file = ruby_source_testfile_path('ustack_target.rb')
       require @source_file
-      ProductionBreakpoints.install_breakpoint(ProductionBreakpoints::Breakpoints::Locals,
+      ProductionBreakpoints.install_breakpoint(ProductionBreakpoints::Breakpoints::Ustack,
                                                @source_file, @start_line, @end_line,
                                                trace_id: @trace_id)
-
     end
+
     # FIXME uses linux-specific code, should separate for portability
-    def test_install_breakpoint
-      assert(ProductionBreakpoints::MyLocalsClass.instance_methods.include?(:some_method))
+    #def test_install_breakpoint
+    #  assert(ProductionBreakpoints::MyUstackClass.instance_methods.include?(:some_method))
 
-      c = ProductionBreakpoints::MyLocalsClass.new
-      assert(2, c.some_method)
-    end
+    #  assert(2, c.some_method)
 
+    #  c.sleep_loop(60)
+    #end
 
     def test_elf_notes
       breakpoint = ProductionBreakpoints.installed_breakpoints[@trace_id]
+
+      #c = ProductionBreakpoints::MyUstackClass.new
+      #c.sleep_loop(60)
 
       # FIXME this is linux specific from here on
       provider_fd = find_provider_fd(breakpoint.provider_name)

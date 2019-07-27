@@ -28,6 +28,7 @@ module ProductionBreakpoints
     when 'ProductionBreakpoints::Breakpoints::Latency'
     when 'ProductionBreakpoints::Breakpoints::Inspect'
     when 'ProductionBreakpoints::Breakpoints::Locals'
+    when 'ProductionBreakpoints::Breakpoints::Ustack'
       # logger.debug("Creating latency tracer")
       # now rewrite source to call this created breakpoint through parser
     else
@@ -41,14 +42,14 @@ module ProductionBreakpoints
   end
 
   def disable_breakpoint(trace_id)
-    breakpoint = installed_breakpoints.delete(trace_id)
+    breakpoint = installed_breakpoints.delete(trace_id.to_sym)
     breakpoint.unload
     breakpoint.uninstall
   end
 
   def disable!
     installed_breakpoints.each do |trace_id, _bp|
-      disable_breakpoint(trace_id)
+      disable_breakpoint(trace_id.to_sym)
     end
   end
 

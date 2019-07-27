@@ -8,7 +8,6 @@ module ProductionBreakpoints
       attr_reader :provider_name, :name
 
       def initialize(source_file, start_line, end_line, trace_id: 1)
-        @injector_module = nil
         @source_file = source_file
         @start_line = start_line
         @end_line = end_line
@@ -25,17 +24,23 @@ module ProductionBreakpoints
         @tracepoint = StaticTracing::Tracepoint.new(@provider_name,
                                                     @name,
                                                     *self.class.const_get('TRACEPOINT_TYPES'))
+        @trace_lines = (@start_line..@end_line).to_a
+        @vm_tracepoints = {}
       end
 
       def install
-        @vm_tracepoint = TracePoint.new(:line) do |tp|
-          handle(tp)
+        @trace_lines.each do |line|
+          vm_tp = TracePoint.new(:line) do |tp|
+            handle(tp)
+          end
+          vm_tp.enable(target: @ns.instance_method(@method_symbol),
+                       target_line: line)
+          @vm_tracepoints[line] = vm_tp
         end
-        @vm_tracepoint.enable(target: @ns.instance_method(@method_symbol))
       end
 
       def uninstall
-        @vm_tracepoint.disable
+        @vm_tracepoints.each_value(&:disable)
       end
 
       def load

@@ -6,16 +6,21 @@ module ProductionBreakpoints
     class Latency < Base # FIXME: refactor a bunch of these idioms into Base
       TRACEPOINT_TYPES = [Integer].freeze
 
-      # FIXME: needs to take a hash by instance or thread ID
+      def initialize(*args, &block)
+        super(*args, &block)
+        @trace_lines = [@start_line, @end_line]
+      end
+
+      # FIXME: I think this needs to be keyed by thread id
       # Storing @start_time as an instance variable isn't thread safe
       # as a breakpoint can apply to many classes
       def handle(vm_tracepoint)
         return unless @tracepoint.enabled?
-
-        @start_time = StaticTracing.nsec if vm_tracepoint.lineno == @start_line
+        tid = Thread.current.object_id
+        @start_time[tid] = StaticTracing.nsec if vm_tracepoint.lineno == @start_line
 
         if vm_tracepoint.lineno == @end_line
-          duration = StaticTracing.nsec - start_time
+          duration = StaticTracing.nsec - @start_time[tid]
           @tracepoint.fire(duration)
         end
       end

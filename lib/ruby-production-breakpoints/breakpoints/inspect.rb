@@ -6,10 +6,10 @@ module ProductionBreakpoints
     class Inspect < Base
       TRACEPOINT_TYPES = [String].freeze
 
-      def handle(_vm_tracepoint)
+      def handle(vm_tracepoint)
         return unless @tracepoint.enabled?
 
-        val = tracepoint.return_value
+        # val = tracepoint.return_value FIXME doesn't work
         @tracepoint.fire(val.inspect)
       end
     end
