@@ -10,8 +10,8 @@ module ProductionBreakpoints
     end
 
     # Helpful for debugging, but delete this
-    def sleep_loop
-      (1..30).each { |_| some_method }
+    def sleep_loop(n)
+      (1..n).each { |_| some_method }
     end
   end
 end

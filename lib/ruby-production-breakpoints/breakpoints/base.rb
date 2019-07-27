@@ -52,7 +52,7 @@ module ProductionBreakpoints
       end
 
       # Allows for specific handling of the selected lines
-      def handle(caller_binding); end
+      def handle(vm_tracepoint); end
     end
   end
 end
