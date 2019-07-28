@@ -5,7 +5,7 @@ module ProductionBreakpoints
     class Base
       TRACEPOINT_TYPES = [].freeze
 
-      attr_reader :provider_name, :name
+      attr_reader :provider_name, :name, :tracepoint
 
       def initialize(source_file, start_line, end_line, trace_id: 1)
         @source_file = source_file

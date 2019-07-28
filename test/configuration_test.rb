@@ -1,45 +1,37 @@
-require 'test_helper'
-
-module ProductionBreakpoints
-  class ConfigTest < ProductionBreakpointsTest
-
-    def setup
-      require ruby_source_testfile_path('config_target.rb')
-      ProductionBreakpoints.config_path = config_testfile_path('test_load.json')
-      Process.kill(Configuration.instance.signal, Process.pid)
-      @bp = JSON.load(File.read(ProductionBreakpoints.config_path))['breakpoints'].first
-    end
-
-    def test_load_from_config
-
-      assert(ProductionBreakpoints::MyConfigClass.instance_methods.include?(:some_method))
-      c = ProductionBreakpoints::MyConfigClass.new
-      assert(2, c.some_method)
-
-    end
-
-    def test_elf_notes
-      breakpoint = ProductionBreakpoints.installed_breakpoints[@bp['trace_id'].to_sym]
-      # FIXME this is linux specific from here on
-      provider_fd = find_provider_fd(breakpoint.provider_name)
-      assert(provider_fd)
-
-      elf_notes = `readelf --notes #{provider_fd}`
-
-      assert_equal(breakpoint.provider_name,
-                   elf_notes.lines.find { |l| l =~ /\s+Provider:/ }.split(/\s+/).last)
-
-
-      assert_equal(breakpoint.name,
-                   elf_notes.lines.find { |l| l =~ /\s+Name:/ }.split(/\s+/).last)
-    end
-
-    def teardown
-      ProductionBreakpoints.disable_breakpoint(@bp['trace_id'].to_sym)
-    end
-
-    def after_all
-      ProductionBreakpoints.disable!
-    end
-  end
-end
+#module StaticTracing
+#  class ConfigurationTest < MiniTest::Test
+#    def setup
+#      @config = Configuration.instance
+#    end
+#
+#    def test_mode
+#      @config.mode = 'tracing'
+#      assert_equal 'tracing', @config.mode
+#    end
+#
+#    def test_signal
+#      @config.signal = 'INT'
+#      assert_equal 'INT', @config.signal
+#    end
+#
+#    def test_changing_the_mode_to_off_will_force_static_tracing_to_be_disabled
+#      StaticTracing.enable!
+#      assert StaticTracing.enabled?
+#      @config.mode = Configuration::Modes::OFF
+#      refute StaticTracing.enabled?
+#    end
+#
+#    def test_changing_the_mode_to_on_will_force_static_tracing_to_be_enabled
+#      StaticTracing.disable!
+#      refute StaticTracing.enabled?
+#      @config.mode = Configuration::Modes::ON
+#      assert StaticTracing.enabled?
+#    end
+#
+#    def test_changing_the_signal_will_disable_trapping_the_original_signal
+#      Signal.expects(:trap).with(@config.signal, 'DEFAULT')
+#      Signal.expects(:trap).with('INT')
+#      @config.signal = 'INT'
+#    end
+#  end
+#end

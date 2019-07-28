@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'json'
+
 module ProductionBreakpoints
   module Breakpoints
     # Show local variables and their values
@@ -13,7 +15,7 @@ module ProductionBreakpoints
         vals = locals.map do |v|
           [v, vm_tracepoint.binding.local_variable_get(v)]
         end.to_h
-        @tracepoint.fire(vals.inspect)
+        @tracepoint.fire(vals.to_json)
       end
     end
   end
