@@ -6,7 +6,6 @@ module ProductionBreakpoints
     class Ustack < Base
       TRACEPOINT_TYPES = [String, String, String,
                           String, String, String].freeze
-      MAX_USDT_STR_SIZE = 200 # see https://github.com/iovisor/bpftrace/blob/0e97b2c8f6bbc50a31d404a32000b5b2b85753b0/src/main.cpp#L337-L345
       MAX_STACK_STR_SIZE = MAX_USDT_STR_SIZE * TRACEPOINT_TYPES.size
 
       def initialize(*args, &block)

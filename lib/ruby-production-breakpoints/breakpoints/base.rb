@@ -3,6 +3,8 @@
 module ProductionBreakpoints
   module Breakpoints
     class Base
+      # workaround for https://github.com/iovisor/bpftrace/issues/305
+      MAX_USDT_STR_SIZE = 64 # see https://github.com/iovisor/bpftrace/blob/0e97b2c8f6bbc50a31d404a32000b5b2b85753b0/src/main.cpp#L337-L345
       TRACEPOINT_TYPES = [].freeze
 
       attr_reader :provider_name, :name, :tracepoint

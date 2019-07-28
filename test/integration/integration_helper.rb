@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 require 'minitest/autorun'
+require 'minitest/reporters'
 require 'pry-byebug' if ENV['PRY']
 
 require 'tempfile'
 
+require 'ruby-production-breakpoints'
 require 'ruby-static-tracing'
 
 CACHED_DTRACE_PATH = File.expand_path('../../.bin/dtrace', __dir__).freeze
@@ -24,8 +26,12 @@ module TraceRunner
   def trace(*flags, script: nil, wait: nil)
     cmd = ''
     if StaticTracing::Platform.linux?
+      outfile = Tempfile.new('ruby-production_bp_out')
+      @path = outfile.path
+      outfile.unlink
+
       cmd = 'bpftrace'
-      cmd = [cmd, "#{script}.bt"] if script
+      cmd = [cmd, "#{script}.bt", '-o', @path] if script
     elsif StaticTracing::Platform.darwin?
       cmd = [CACHED_DTRACE_PATH, '-q']
       cmd = [cmd, '-s', "#{script}.dt"] if script
@@ -37,32 +43,44 @@ module TraceRunner
     cmd = [cmd, flags]
 
     command = cmd.flatten.join(' ')
-    puts command if ENV['DEBUG']
-    CommandRunner.new(command, wait)
+    CommandRunner.new(command, wait, path: @path)
   end
 end
 
 # FIXME: add a "fixtures record" helper to facilitate adding tests / updating fixtures
 class CommandRunner
   TRACE_ENV_DEFAULT = {
-    'BPFTRACE_STRLEN' => '200' # workaround for https://github.com/iovisor/bpftrace/issues/305
+    'BPFTRACE_STRLEN' => ProductionBreakpoints::
+                                                Breakpoints::
+                                                Base::MAX_USDT_STR_SIZE.to_s
   }.freeze
 
   attr_reader :pid, :path
 
-  def initialize(command, wait=nil)
-    outfile = Tempfile.new('ruby-production_bp_out')
-    @path = outfile.path
-    outfile.unlink
-    at_exit { File.unlink(@path) if File.exist?(@path) }
+  def initialize(command, wait=nil, path: path)
+    puts command if ENV['DEBUG']
 
-    @pid = Process.spawn(TRACE_ENV_DEFAULT, command, out: [@path, 'w'], err: '/dev/null')
+    unless path
+      outfile = Tempfile.new('ruby-production_bp_out')
+      @path = outfile.path
+      outfile.unlink
+    end
+
+    if path
+      @pid = Process.spawn(TRACE_ENV_DEFAULT,
+                           command, out: '/dev/null', err: '/dev/null')
+      @path = path
+    else
+      @pid = Process.spawn(TRACE_ENV_DEFAULT,
+                           command, out: [@path, 'w'], err: '/dev/null')
+    end
+
     PIDS << @pid
     sleep wait if wait
   end
 
   def output
-    output = File.read(@path)
+    File.read(@path)
   end
 
   def interrupt(wait=nil)
@@ -139,3 +157,5 @@ end
 if StaticTracing::Platform.darwin?
   cache_dtrace unless File.exist?(CACHED_DTRACE_PATH)
 end
+
+Minitest::Reporters.use! [Minitest::Reporters::SpecReporter.new(color: true)]
