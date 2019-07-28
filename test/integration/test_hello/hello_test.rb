@@ -11,6 +11,7 @@ class HelloTest < IntegrationTestCase
     # Signal the target to trigger probe firing
     target.usr2(1)
 
+    assert_equal(JSON.load(tracer.output.lines.last)['hello'], 'Hello world')
     assert_tracer_output(tracer.output, read_probe_file('hello.out'))
   end
 end
