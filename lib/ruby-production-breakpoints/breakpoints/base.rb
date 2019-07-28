@@ -32,6 +32,7 @@ module ProductionBreakpoints
 
       def install
         @trace_lines.each do |line|
+          puts "Adding tracepoint for #{line}"
           vm_tp = TracePoint.new(:line) do |tp|
             handle(tp)
           end

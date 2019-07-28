@@ -15,16 +15,18 @@ module ProductionBreakpoints
     end
 
     # FIXME uses linux-specific code, should separate for portability
-    def test_install_breakpoint
-      assert(ProductionBreakpoints::MyClass.instance_methods.include?(:some_method))
+    #def test_install_breakpoint
+    #  assert(ProductionBreakpoints::MyClass.instance_methods.include?(:some_method))
 
-      c = ProductionBreakpoints::MyClass.new
-      assert(2, c.some_method)
-    end
+    #  c = ProductionBreakpoints::MyClass.new
+    #  assert(2, c.some_method)
+    #end
 
     def test_elf_notes
       breakpoint = ProductionBreakpoints.installed_breakpoints[@trace_id]
 
+      c = ProductionBreakpoints::MyClass.new
+      c.sleep_loop 60
       # FIXME this is linux specific from here on
       provider_fd = find_provider_fd(breakpoint.provider_name)
       assert(provider_fd)
