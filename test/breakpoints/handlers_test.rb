@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-#module StaticTracing
+# module StaticTracing
 #  class TracersTest < MiniTest::Test
 #    def teardown
 #      Tracers.clean
@@ -24,4 +24,4 @@ require 'test_helper'
 #      Tracers.disable!
 #    end
 #  end
-#end
+# end

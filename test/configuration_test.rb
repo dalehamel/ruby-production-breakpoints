@@ -1,4 +1,4 @@
-#module StaticTracing
+# module StaticTracing
 #  class ConfigurationTest < MiniTest::Test
 #    def setup
 #      @config = Configuration.instance
@@ -34,4 +34,4 @@
 #      @config.signal = 'INT'
 #    end
 #  end
-#end
+# end

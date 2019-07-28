@@ -7,7 +7,7 @@ require 'tempfile'
 
 require 'ruby-static-tracing'
 
-CACHED_DTRACE_PATH = File.expand_path("../../../.bin/dtrace", __FILE__).freeze
+CACHED_DTRACE_PATH = File.expand_path('../../.bin/dtrace', __dir__).freeze
 PIDS = []
 def cleanup_pids
   PIDS.each do |p|
@@ -50,7 +50,7 @@ class CommandRunner
 
   attr_reader :pid, :path
 
-  def initialize(command, wait = nil)
+  def initialize(command, wait=nil)
     outfile = Tempfile.new('ruby-production_bp_out')
     @path = outfile.path
     outfile.unlink
@@ -65,25 +65,25 @@ class CommandRunner
     output = File.read(@path)
   end
 
-  def interrupt(wait = nil)
+  def interrupt(wait=nil)
     rc = Process.kill('INT', @pid)
     sleep wait if wait
     rc
   end
 
-  def kill(wait = nil)
+  def kill(wait=nil)
     rc = Process.kill('KILL', @pid)
     sleep wait if wait
     rc
   end
 
-  def urg(wait = nil)
+  def urg(wait=nil)
     rc = Process.kill('URG', @pid)
     sleep wait if wait
     rc
   end
 
-  def usr2(wait = nil)
+  def usr2(wait=nil)
     rc = Process.kill('USR2', @pid)
     sleep wait if wait
     rc
@@ -137,5 +137,5 @@ def cache_dtrace
 end
 
 if StaticTracing::Platform.darwin?
-  cache_dtrace unless File.exists?(CACHED_DTRACE_PATH)
+  cache_dtrace unless File.exist?(CACHED_DTRACE_PATH)
 end
